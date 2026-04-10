@@ -54,7 +54,8 @@ export default async function LandingPage() {
             variant="h6"
             sx={{ opacity: 0.9, mb: 5, fontWeight: "normal" }}
           >
-            အချိန်ကုန်သက်သာပြီး စနစ်ကျသော ဆီဖြည့်တင်းခြင်း ဝန်ဆောင်မှု။ <br />
+            အချိန်ကုန်၊ လူပင်ပန်းသက်သာပြီး <br />
+            စနစ်ကျသော ဆီဖြည့်ခြင်း ဝန်ဆောင်မှု။ <br />
             ဖုန်းမှတစ်ဆင့် တန်းစီနံပါတ်ကြိုယူပြီးမှသာ ဆီဆိုင်သို့ သွားရောက်ပါ။
           </Typography>
 
@@ -163,7 +164,7 @@ export default async function LandingPage() {
                   ၁။ ဆီဆိုင်ရွေးချယ်ပါ
                 </Typography>
                 <Typography color="text.secondary">
-                  မိမိနှင့် အနီးဆုံး သို့မဟုတ် ဆီသွားရောက်ဖြည့်တင်းလိုသော
+                  မိမိ၏ ယာဉ်အချက်အလက်ကို ထည့်သွင်းပီး ဆီသွားရောက်ဖြည့်တင်းလိုသော
                   ဆီဆိုင်ကို စာရင်းထဲမှ ရွေးချယ်ပါ။
                 </Typography>
               </CardContent>
@@ -201,8 +202,7 @@ export default async function LandingPage() {
                   ၂။ တန်းစီနံပါတ် ယူပါ
                 </Typography>
                 <Typography color="text.secondary">
-                  လူကြီးမင်း၏ ယာဉ်အချက်အလက်ကို ထည့်သွင်း၍ Queue ရယူပါ။ ရရှိလာသော
-                  QR Code ကို သိမ်းထားပါ။
+                  Queue ရယူပါ။ ရရှိလာသော QR Code ကို သိမ်းထားပါ။
                 </Typography>
               </CardContent>
             </Card>
@@ -240,7 +240,7 @@ export default async function LandingPage() {
                 </Typography>
                 <Typography color="text.secondary">
                   ဆီဆိုင်သို့ရောက်သောအခါ ဝန်ထမ်းအား QR Code ပြသ၍
-                  လွယ်ကူလျင်မြန်စွာ ဆီဖြည့်တင်းနိုင်ပါသည်။
+                  လွယ်ကူလျင်မြန်စွာ ဆီဖြည့်တင်းနိုင်ပါပြီ။
                 </Typography>
               </CardContent>
             </Card>
@@ -253,8 +253,8 @@ export default async function LandingPage() {
       {/* ========================================== */}
       <Box bgcolor="grey.100" py={4} textAlign="center">
         <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} Dawei Fuel Queue Management System. All
-          rights reserved.
+          © {new Date().getFullYear()} Dawei Fuel Queue Management System.
+          <br /> All rights reserved.
         </Typography>
       </Box>
     </main>
