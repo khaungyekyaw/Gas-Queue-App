@@ -36,8 +36,8 @@ export const config = {
   matcher: [
     "/super-admin/:path*",
     "/station-admin/:path*",
-    "/stations/:path*",
-    "/queue/:path*",
-    "/add-vehicle/:path*",
+    "/customers/stations/:path*",
+    "/customers/queue/:path*",
+    "/customers/add-vehicle/:path*",
   ],
 };

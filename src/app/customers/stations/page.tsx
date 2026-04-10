@@ -15,7 +15,7 @@ export default async function StationsPage() {
   });
 
   if (!user?.plateNumber || !user?.fuelType) {
-    redirect("/add-vehicle");
+    redirect("/customers/add-vehicle");
   }
 
   // ဒီနေ့အတွက် နေ့စွဲ (Queue တွေ Count ဖို့)
