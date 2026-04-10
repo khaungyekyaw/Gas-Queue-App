@@ -12,7 +12,7 @@ export default async function QueuePage({
   // ၁။ Login ဝင်ထားခြင်း ရှိမရှိ စစ်ဆေးမယ်
   const session = await getServerSession();
   if (!session?.user?.email) {
-    redirect("/login");
+    redirect("/login?callbackUrl=/customers");
   }
 
   // ၂။ User ရဲ့ ID ကို လှမ်းယူမယ်
@@ -20,7 +20,7 @@ export default async function QueuePage({
     where: { email: session.user.email },
   });
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?callbackUrl=/customers");
 
   // ၃။ ဒီနေ့အတွက် ယူထားတဲ့ PENDING Queue ရှိ/မရှိ စစ်ဆေးမယ် (Refresh လုပ်ရင် QR ပျောက်မသွားအောင်)
   const today = new Date();

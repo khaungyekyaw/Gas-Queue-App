@@ -23,7 +23,7 @@ import { redirect } from "next/navigation";
 
 export default async function CustomerDashboard() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) redirect("/login");
+  if (!session?.user?.email) redirect("/login?callbackUrl=/customers");
 
   // ၁။ User ရဲ့ အချက်အလက်များကို ဆွဲထုတ်မည်
   const user = await prisma.user.findUnique({

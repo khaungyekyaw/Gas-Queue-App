@@ -1,65 +1,97 @@
 // app/(customer)/add-vehicle/actions.ts
 "use server";
 
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/libs/prisma";
-import { FuelType } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { z } from "zod";
-
-const VehicleSchema = z.object({
-  vehicleTypeId: z.string().min(1, "ယာဉ်အမျိုးအစား ရွေးချယ်ပါ"),
-
-  // Zod ရဲ့ z.nativeEnum() ကို သုံးပြီး Prisma Enum နဲ့ ချိတ်ဆက်လိုက်တယ်
-  fuelType: z.nativeEnum(FuelType, {
-    message: "ဆီအမျိုးအစား ရွေးချယ်ပါ",
-  }),
-
-  plateNumber: z
-    .string()
-    .min(2, "ယာဉ်နံပါတ် အနည်းဆုံး ၂ လုံး ထည့်ပါ")
-    .transform((val) => val.replace(/[\s-]/g, "").toUpperCase()),
-});
+import { revalidatePath } from "next/cache";
 
 export async function addVehicleAction(prevState: any, formData: FormData) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session?.user?.email) return { error: "Login ဝင်ရန် လိုအပ်ပါသည်" };
 
-  const validatedFields = VehicleSchema.safeParse({
-    vehicleTypeId: formData.get("vehicleTypeId"),
-    fuelType: formData.get("fuelType"), // <--- Data ယူတယ်
-    plateNumber: formData.get("plateNumber"),
-  });
+  const vehicleTypeId = formData.get("vehicleTypeId") as string;
+  const fuelType = formData.get("fuelType") as any;
+  const plateNumber = formData.get("plateNumber") as string;
 
-  if (!validatedFields.success) {
-    return { error: validatedFields.error.issues[0].message };
+  if (!vehicleTypeId || !fuelType || !plateNumber) {
+    return { error: "အချက်အလက်များကို ပြည့်စုံစွာ ဖြည့်သွင်းပါ။" };
   }
 
-  const { vehicleTypeId, fuelType, plateNumber } = validatedFields.data;
+  // ယာဉ်နံပါတ်ကို စာလုံးအကြီးပြောင်းပြီး နေရာလွတ်တွေ ဖျက်မယ် (ဥပမာ 1m 1234 -> 1M1234)
+  const formattedPlateNumber = plateNumber.toUpperCase().replace(/\s/g, "");
 
   try {
-    const existingVehicle = await prisma.user.findUnique({
-      where: { plateNumber },
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
     });
-    if (existingVehicle && existingVehicle.email !== session.user.email) {
-      return {
-        error: "ဤယာဉ်နံပါတ်သည် အခြားအကောင့်တစ်ခုနှင့် ချိတ်ဆက်ထားပြီးဖြစ်ပါသည်",
-      };
+
+    if (!user) return { error: "User အကောင့် ရှာမတွေ့ပါ။" };
+
+    const now = new Date();
+
+    // Edit လုပ်တာလား စစ်ဆေးမည်
+    const isEditing = !!user.lastVehicleChangeDate;
+
+    if (isEditing && user.lastVehicleChangeDate) {
+      const lastChange = new Date(user.lastVehicleChangeDate);
+      const hoursDiff =
+        (now.getTime() - lastChange.getTime()) / (1000 * 60 * 60);
+      const daysDiff = hoursDiff / 24;
+
+      // Rule 1: ယာဉ်နံပါတ် ပြောင်းရင် (၁ ပတ် = ၇ ရက် စောင့်ရမည်)
+      if (user.plateNumber !== formattedPlateNumber) {
+        if (daysDiff < 7) {
+          const waitDays = Math.ceil(7 - daysDiff);
+          return {
+            error: `ယာဉ်နံပါတ်ကို ၁ ပတ်လျှင် ၁ ကြိမ်သာ ပြင်ခွင့်ရှိပါသည်။ နောက်ထပ် ${waitDays} ရက် စောင့်ပါ။`,
+          };
+        }
+      }
+
+      // Rule 2: ဆီအမျိုးအစား (သို့) ယာဉ်အမျိုးအစား ပြောင်းရင် (၁ ရက် = ၂၄ နာရီ စောင့်ရမည်)
+      if (user.fuelType !== fuelType || user.vehicleTypeId !== vehicleTypeId) {
+        if (hoursDiff < 24) {
+          const waitHours = Math.ceil(24 - hoursDiff);
+          return {
+            error: `ဆီအမျိုးအစားကို ၁ ရက်လျှင် ၁ ကြိမ်သာ ပြင်ခွင့်ရှိပါသည်။ နောက်ထပ် ${waitHours} နာရီ စောင့်ပါ။`,
+          };
+        }
+      }
     }
 
-    // Database Update လုပ်တဲ့အခါ fuelType ပါ ထည့်သိမ်းတယ်
+    // တခြားသူ ယူထားပြီးသား ယာဉ်နံပါတ်လား စစ်ဆေးမည်
+    if (user.plateNumber !== formattedPlateNumber) {
+      const existingPlate = await prisma.user.findUnique({
+        where: { plateNumber: formattedPlateNumber },
+      });
+      if (existingPlate) {
+        return {
+          error: "ဤယာဉ်နံပါတ်မှာ အခြားအကောင့်တွင် မှတ်ပုံတင်ထားပြီး ဖြစ်ပါသည်။",
+        };
+      }
+    }
+
+    // Database တွင် သိမ်းဆည်းမည်
     await prisma.user.update({
-      where: { email: session.user.email },
+      where: { id: user.id },
       data: {
-        plateNumber,
         vehicleTypeId,
-        fuelType: fuelType as any, // Enum type ချိတ်ဆက်ခြင်း
-        lastVehicleChangeDate: new Date(),
+        fuelType,
+        plateNumber: formattedPlateNumber,
+        lastVehicleChangeDate: now, // ပြင်ဆင်ခဲ့တဲ့ အချိန်ကို မှတ်ထားမည်
       },
     });
-  } catch (error) {
-    return { error: "System Error: ဒေတာသိမ်းဆည်းရာတွင် အခက်အခဲရှိနေပါသည်" };
-  }
 
-  redirect("/customers/stations");
+    revalidatePath("/customers");
+    revalidatePath("/add-vehicle");
+
+    return {
+      success: true,
+      message: "ယာဉ်အချက်အလက် အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။",
+    };
+  } catch (error) {
+    console.error(error);
+    return { error: "System Error: သိမ်းဆည်းရာတွင် အခက်အခဲရှိပါသည်။" };
+  }
 }

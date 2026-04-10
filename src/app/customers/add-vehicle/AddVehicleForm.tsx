@@ -24,15 +24,20 @@ interface VehicleType {
 
 export default function AddVehicleForm({
   vehicleTypes,
+  user, // <--- user data ကို လက်ခံမည်
 }: {
   vehicleTypes: VehicleType[];
+  user: any;
 }) {
   const [state, formAction] = useActionState(addVehicleAction, null);
+
+  // User မှာ Data အဟောင်းရှိမရှိ စစ်ဆေးခြင်း (Edit mode လား၊ Add mode လား)
+  const isEditing = !!(user.plateNumber || user.fuelType);
 
   return (
     <Container maxWidth="sm" sx={{ pt: 3, pb: 4 }}>
       {/* အစ်ကိုတောင်းဆိုထားတဲ့ အရေးကြီး သတိပေးစာ (Warning Alert) */}
-      <Alert severity="warning" sx={{ mb: 4, borderRadius: 2 }}>
+      <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
         <AlertTitle sx={{ fontWeight: "bold" }}>အထူးသတိပြုရန်</AlertTitle>
         လူကြီးမင်း၏ ယာဉ်အမျိုးအစားနှင့် အသုံးပြုမည့် ဆီအမျိုးအစားကို မှန်ကန်စွာ
         ရွေးချယ်ပါ။
@@ -42,13 +47,54 @@ export default function AddVehicleForm({
         </strong>
       </Alert>
 
+      {/* ========================================== */}
+      {/* ကန့်သတ်ချက်များ သတိပေးစာ (အသစ်ထည့်သွင်းသည်) */}
+      {/* ========================================== */}
+      {isEditing && (
+        <Alert
+          severity="error"
+          variant="outlined"
+          sx={{ mb: 4, borderRadius: 2, bgcolor: "#fff0f0" }}
+        >
+          <AlertTitle sx={{ fontWeight: "bold", color: "error.main" }}>
+            ပြင်ဆင်ခြင်းဆိုင်ရာ စည်းကမ်းချက်များ
+          </AlertTitle>
+          <Typography variant="body2" color="error.dark" component="div">
+            <ul style={{ margin: 0, paddingLeft: "20px" }}>
+              <li>
+                <strong>ယာဉ်အမျိုးအစားနှင့် ဆီအမျိုးအစား</strong> ကို ၁ ရက်လျှင်
+                ၁ ကြိမ်သာ ပြင်ဆင်ခွင့်ရှိပါသည်။
+              </li>
+              <li>
+                <strong>ယာဉ်နံပါတ်</strong> ကို ၁ ပတ်လျှင် ၁ ကြိမ်သာ
+                ပြင်ဆင်ခွင့်ရှိပါသည်။
+              </li>
+            </ul>
+          </Typography>
+        </Alert>
+      )}
+
       <Typography variant="h6" fontWeight="bold" gutterBottom>
-        ယာဉ်အချက်အလက် ဖြည့်သွင်းရန်
+        {isEditing ? "ယာဉ်အချက်အလက် ပြင်ဆင်ရန်" : "ယာဉ်အချက်အလက် ဖြည့်သွင်းရန်"}
       </Typography>
 
       {state?.error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {state.error}
+        </Alert>
+      )}
+
+      {state?.success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {state.message}
+          <Button
+            color="inherit"
+            size="small"
+            sx={{ ml: 2, fontWeight: "bold" }}
+            href="/customers"
+          >
+            Dashboard သို့ သွားမည်
+          </Button>
         </Alert>
       )}
 
@@ -62,7 +108,12 @@ export default function AddVehicleForm({
         >
           ၁။ ယာဉ်အမျိုးအစား
         </Typography>
-        <RadioGroup name="vehicleTypeId" row sx={{ mb: 3, gap: 1 }}>
+        <RadioGroup
+          name="vehicleTypeId"
+          defaultValue={user.vehicleTypeId || ""} // <--- Data အဟောင်းကို အသင့်ပြထားမယ်
+          row
+          sx={{ mb: 3, gap: 1 }}
+        >
           {vehicleTypes.map((type) => (
             <Card
               key={type.id}
@@ -85,7 +136,7 @@ export default function AddVehicleForm({
           ))}
         </RadioGroup>
 
-        {/* ၂။ ဆီအမျိုးအစား ရွေးချယ်ခြင်း (အသစ်ထပ်ထည့်ထားသောအပိုင်း) */}
+        {/* ၂။ ဆီအမျိုးအစား ရွေးချယ်ခြင်း */}
         <Typography
           variant="subtitle2"
           fontWeight="bold"
@@ -94,7 +145,12 @@ export default function AddVehicleForm({
         >
           ၂။ အသုံးပြုမည့် ဆီအမျိုးအစား
         </Typography>
-        <RadioGroup name="fuelType" row sx={{ mb: 3, gap: 1 }}>
+        <RadioGroup
+          name="fuelType"
+          defaultValue={user.fuelType || ""} // <--- Data အဟောင်းကို အသင့်ပြထားမယ်
+          row
+          sx={{ mb: 3, gap: 1 }}
+        >
           {[
             { value: "OCTANE_92", label: "92 Ron" },
             { value: "OCTANE_95", label: "95 Ron" },
@@ -133,6 +189,7 @@ export default function AddVehicleForm({
         <TextField
           fullWidth
           name="plateNumber"
+          defaultValue={user.plateNumber || ""} // <--- Data အဟောင်းကို အသင့်ပြထားမယ်
           variant="outlined"
           sx={{ mb: 4 }}
           InputProps={{ sx: { borderRadius: 2, bgcolor: "background.paper" } }}

@@ -89,7 +89,7 @@ export default async function LandingPage() {
                   variant="contained"
                   color="secondary"
                   size="large"
-                  href="/customers" // Middleware သို့မဟုတ် Route ကနေ Login ကို အလိုလို ကန်ပို့ပါလိမ့်မည်
+                  href="/login?callbackUrl=/customers" // Middleware သို့မဟုတ် Route ကနေ Login ကို အလိုလို ကန်ပို့ပါလိမ့်မည်
                   sx={{
                     py: 1.5,
                     px: 4,

@@ -8,7 +8,7 @@ import StationList from "./StationList";
 
 export default async function StationsPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) redirect("/login");
+  if (!session?.user?.email) redirect("/login?callbackUrl=/customers");
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
