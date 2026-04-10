@@ -39,14 +39,39 @@ export default async function QueuePage({
     },
   });
 
+  // ==========================================
+  // ရှေ့တွင်ကျန်သော လူအရေအတွက် (peopleAhead) အား တွက်ချက်ခြင်း (အသစ်ထည့်သွင်းသည်)
+  // ==========================================
+  let peopleAhead = 0;
+  if (currentQueue) {
+    peopleAhead = await prisma.queue.count({
+      where: {
+        stationId: currentQueue.stationId,
+        status: "PENDING", // PENDING ဖြစ်နေဆဲ သူတွေကိုသာ ရေတွက်မည်
+        createdAt: {
+          gte: today, // ယနေ့ ယူထားသော
+          lt: currentQueue.createdAt, // လက်ရှိ Customer ထက် အချိန်စော၍ ယူထားသူများ
+        },
+      },
+    });
+  }
+
   // ၄။ URL ကနေ stationId ကို ဖမ်းယူမယ်
   const resolveParams = await searchParams;
   const stationId = resolveParams.stationId;
 
+  // currentQueue ထဲသို့ peopleAhead ကိုပါ ပေါင်းထည့်၍ Client Component သို့ ပို့ပေးမည်
+  const queueDataWithPeopleAhead = currentQueue
+    ? { ...currentQueue, peopleAhead }
+    : null;
+
   return (
     <main>
       {/* ၅။ Data တွေကို Client Component ဆီ လှမ်းပို့ပေးမယ် */}
-      <QueueDisplay stationId={stationId} currentQueue={currentQueue} />
+      <QueueDisplay
+        stationId={stationId}
+        currentQueue={queueDataWithPeopleAhead}
+      />
     </main>
   );
 }

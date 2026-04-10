@@ -28,7 +28,7 @@ export default function LoginForm() {
   const handleGoogleLogin = async () => {
     setLoadingGoogle(true);
     // Ep 33: NextAuth ရဲ့ signIn ကို သုံးပြီး Google ဘက်ကို လွှဲပေးတာပါ
-    await signIn("google", { callbackUrl: "/customers/stations" });
+    await signIn("google", { callbackUrl: "/customers/" });
   };
 
   // ၂။ Admin Credentials Login

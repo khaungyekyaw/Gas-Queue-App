@@ -8,7 +8,7 @@ import { signOut } from "next-auth/react";
 export default function LogoutButton() {
   const handleLogout = async () => {
     // NextAuth ရဲ့ signOut ကိုခေါ်ပြီး၊ ထွက်ပြီးတာနဲ့ /login ကို တန်းပို့ပေးပါမယ်
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ callbackUrl: "/" });
   };
 
   return (

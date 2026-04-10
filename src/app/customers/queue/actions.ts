@@ -94,9 +94,40 @@ export async function checkQueueStatusAction(queueId: string) {
   try {
     const queue = await prisma.queue.findUnique({
       where: { id: queueId },
-      select: { status: true }, // အကုန်မဆွဲဘဲ Status တစ်ခုတည်းကိုပဲ ပေါ့ပေါ့ပါးပါး ဆွဲထုတ်မယ်
+      // အကုန်မဆွဲဘဲ Status၊ Station ID နှင့် အချိန်ကိုသာ ပေါ့ပေါ့ပါးပါး ဆွဲထုတ်မယ်
+      select: {
+        status: true,
+        stationId: true,
+        createdAt: true,
+      },
     });
-    return { status: queue?.status };
+
+    if (!queue) return { error: "Queue မတွေ့ရှိပါ။" };
+
+    // ==========================================
+    // Status က PENDING ဖြစ်နေသေးရင် ရှေ့ကလူအရေအတွက် (peopleAhead) ပါ တွက်ပေးမည်
+    // ==========================================
+    let peopleAhead = 0;
+    if (queue.status === "PENDING") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      peopleAhead = await prisma.queue.count({
+        where: {
+          stationId: queue.stationId,
+          status: "PENDING", // PENDING ဖြစ်နေဆဲ သူများကိုသာ ရေတွက်မည်
+          createdAt: {
+            gte: today, // ယနေ့ ယူထားသော
+            lt: queue.createdAt, // လက်ရှိ Customer ထက် အချိန်စော၍ ယူထားသူများ
+          },
+        },
+      });
+    }
+
+    return {
+      status: queue.status,
+      peopleAhead: queue.status === "PENDING" ? peopleAhead : undefined,
+    };
   } catch (error) {
     return { error: "Status စစ်ဆေးရာတွင် အခက်အခဲရှိပါသည်။" };
   }

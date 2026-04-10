@@ -48,7 +48,7 @@ export default async function LandingPage() {
             gutterBottom
             sx={{ fontSize: { xs: "2.5rem", md: "3.5rem" } }}
           >
-            ထားဝယ် ဆီဆိုင်တန်းစီစနစ်
+            ထားဝယ် ဆီတန်းစီစနစ်
           </Typography>
           <Typography
             variant="h6"
@@ -115,7 +115,7 @@ export default async function LandingPage() {
                     "&:hover": { borderWidth: 2 },
                   }}
                 >
-                  ဝန်ထမ်း ဝင်ပေါက်
+                  Admins only
                 </Button>
               </>
             )}

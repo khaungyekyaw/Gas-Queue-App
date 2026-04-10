@@ -2,6 +2,7 @@
 "use client";
 
 import LogoutButton from "@/components/LogoutButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // Dashboard သို့ ပြန်သွားရန် Icon အသစ်
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined"; // Icon အသစ်
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -68,9 +69,16 @@ export default function StationList({
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5" fontWeight="bold">
-          ဆီဆိုင်များ
-        </Typography>
+        {/* ========================================== */}
+        {/* Dashboard သို့ ပြန်သွားမည့် Button အသစ်ထည့်သွင်းခြင်း */}
+        {/* ========================================== */}
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => router.push("/customers")} // Customer Dashboard သို့ ပြန်သွားမည်
+          sx={{ fontWeight: "bold", color: "text.secondary" }}
+        >
+          Dashboard သို့ ပြန်သွားမည်
+        </Button>
         <LogoutButton />
       </Box>
 
@@ -134,6 +142,9 @@ export default function StationList({
           ရွေးချယ်၍ Queue ရယူပါ။
         </Alert>
       )}
+      <Typography variant="h5" fontWeight="bold" mb={2}>
+        ဆီဆိုင်များ
+      </Typography>
 
       <Stack spacing={2}>
         {stations.length === 0 ? (

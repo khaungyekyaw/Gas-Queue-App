@@ -1,9 +1,11 @@
 // app/(customer)/queue/QueueDisplay.tsx
 "use client";
 
+import AccessTimeIcon from "@mui/icons-material/AccessTime"; // အချိန် Icon အသစ်
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // Back Button အတွက်
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined"; // Cancel အတွက်
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt"; // လူ Icon အသစ်
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import {
   Alert,
@@ -36,6 +38,7 @@ interface CurrentQueue {
   status: string;
   station: { name: string; location: string };
   requestedFuelType: string | null;
+  peopleAhead?: number; // <--- ရှေ့တွင်ကျန်သောလူ အရေအတွက် (အသစ်ထည့်ထားသည်)
 }
 
 export default function QueueDisplay({
@@ -51,6 +54,13 @@ export default function QueueDisplay({
   // Real-time Status ကို သိမ်းထားမယ့် State
   const [liveStatus, setLiveStatus] = useState<string>(
     currentQueue?.status || "PENDING",
+  );
+
+  // ==========================================
+  // ရှေ့တွင်ကျန်သော လူအရေအတွက်ကို သိမ်းမည့် State (အသစ်)
+  // ==========================================
+  const [peopleAhead, setPeopleAhead] = useState<number | undefined>(
+    currentQueue?.peopleAhead,
   );
 
   // Cancel Dialog အတွက် States
@@ -76,8 +86,14 @@ export default function QueueDisplay({
     if (currentQueue?.id && liveStatus === "PENDING") {
       const interval = setInterval(async () => {
         const res = await checkQueueStatusAction(currentQueue.id);
+
         if (res.status && res.status !== "PENDING") {
           setLiveStatus(res.status);
+        }
+
+        // Backend မှ ရှေ့တွင်ကျန်သောလူ (peopleAhead) ကို ပြန်ပို့ပေးပါက Update လုပ်မည်
+        if (res.peopleAhead !== undefined) {
+          setPeopleAhead(res.peopleAhead);
         }
       }, 5000);
 
@@ -211,7 +227,7 @@ export default function QueueDisplay({
                 variant="contained"
                 color="primary"
                 sx={{ mt: 4, borderRadius: 2 }}
-                onClick={() => router.push("/stations")}
+                onClick={() => router.push("/customers/stations")}
               >
                 ဆီဆိုင်များသို့ ပြန်သွားမည်
               </Button>
@@ -256,7 +272,7 @@ export default function QueueDisplay({
                 <Alert
                   severity="info"
                   icon={<QrCode2Icon />}
-                  sx={{ textAlign: "left", borderRadius: 2 }}
+                  sx={{ textAlign: "left", borderRadius: 2, mb: 3 }}
                 >
                   ဆီဆိုင်သို့ရောက်ပါက ဤ QR Code အား တာဝန်ကျဝန်ထမ်းကို ပြသပေးပါ။
                   <br />
@@ -265,6 +281,64 @@ export default function QueueDisplay({
                     {currentQueue.requestedFuelType || "သတ်မှတ်မထားပါ"}
                   </strong>
                 </Alert>
+
+                {/* ========================================== */}
+                {/* 4. မိမိအရှေ့တွင် ကျန်ရှိသောလူနှင့် အချိန် ပြသခြင်း (အသစ်) */}
+                {/* ========================================== */}
+                {peopleAhead !== undefined && (
+                  <Box
+                    p={2}
+                    mb={1}
+                    sx={{
+                      bgcolor: peopleAhead > 0 ? "warning.50" : "success.50",
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor:
+                        peopleAhead > 0 ? "warning.300" : "success.300",
+                    }}
+                  >
+                    {peopleAhead > 0 ? (
+                      <Box display="flex" flexDirection="column" gap={1}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          color="warning.dark"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          gap={1}
+                        >
+                          <PeopleAltIcon /> ရှေ့တွင် {peopleAhead} ဦး
+                          ကျန်ပါသေးသည်
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          color="warning.dark"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          gap={1}
+                        >
+                          <AccessTimeIcon fontSize="small" />
+                          ခန့်မှန်းစောင့်ရန်:{" "}
+                          <strong>{peopleAhead * 3} မိနစ်</strong>
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                        color="success.dark"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap={1}
+                      >
+                        <CheckCircleOutlineIcon /> ဆီဖြည့်ရန် အလှည့်ရောက်ပါပြီ!
+                      </Typography>
+                    )}
+                  </Box>
+                )}
               </CardContent>
             </Card>
 

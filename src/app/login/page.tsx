@@ -24,8 +24,8 @@ export default async function LoginPage() {
     if (!currentUser?.plateNumber || !currentUser?.fuelType) {
       redirect("/customers/add-vehicle");
     } else {
-      // အားလုံးပြည့်စုံမှ ဆီဆိုင်များ စာမျက်နှာကို ပို့မယ်
-      redirect("/customers/stations");
+      // အားလုံးပြည့်စုံမှ dashboard စာမျက်နှာကို ပို့မယ်
+      redirect("/customers");
     }
   }
 
