@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------
+// 1. ENUMS (Status & Roles) - Ep 43
+// -----------------------------------------------------------------
+enum Role {
+  CUSTOMER
+  STATION_ADMIN
+  SUPER_ADMIN
+}
+
+enum QueueStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+  REJECTED
+  CANCELLED
+}
+
+enum FuelType {
+  OCTANE_92
+  OCTANE_95
+  DIESEL
+}
+
+model User {
+  id   String @id @default(cuid())
+  role Role   @default(CUSTOMER)
+
+  // (A) Customer တွေအတွက် (Google Auth)
+  name  String?
+  email String? @unique
+  image String?
+
+  // (B) Admin တွေအတွက် (Credentials - Phone/Password)
+  phoneNo  String? @unique
+  password String?
+
+  // (C) Vehicle Rules
+  plateNumber           String?   @unique // Account တစ်ခု ယာဉ်တစ်စီးပဲရအောင်
+  fuelType              FuelType?
+  lastVehicleChangeDate DateTime? // ပြောင်းချိတ်ရင် စောင့်ရမယ့်ရက် စစ်ဖို့
+
+  // Relations
+  vehicleTypeId String?
+  vehicleType   VehicleType? @relation(fields: [vehicleTypeId], references: [id])
+
+  stationId String? // Station Admin တွေအတွက် သူကိုင်တဲ့ဆိုင်
+  station   Station? @relation(fields: [stationId], references: [id])
+
+  queues Queue[]
+
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model VehicleType {
+  id               String @id @default(cuid())
+  name             String // ဆိုင်ကယ်, ကား, သုံးဘီး
+  weeklyQueueLimit Int    @default(2) // ၁ ပတ် ဘယ်နှစ်ကြိမ် ယူခွင့်ရှိလဲ
+
+  users         User[]
+  stationQuotas StationVehicleQuota[]
+
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Station {
+  id       String  @id @default(cuid())
+  name     String
+  location String
+  isOpen   Boolean @default(true)
+
+  // ဆီရနိုင်မှု အခြေအနေ
+  has92     Boolean @default(true)
+  has95     Boolean @default(true)
+  hasDiesel Boolean @default(true)
+
+  dailyQueueLimit Int @default(100) // ဒီနေ့ လက်ခံမယ့် queue အရေအတွက်
+
+  admins        User[]
+  queues        Queue[]
+  vehicleQuotas StationVehicleQuota[]
+
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Station Admin က ထိန်းချုပ်မယ့် ယာဉ်အမျိုးအစားအလိုက် ရောင်းပေးမယ့် ပမာဏ
+model StationVehicleQuota {
+  id        String @id @default(cuid())
+  maxAmount Int // ဥပမာ - ဆိုင်ကယ် ၅၀၀၀ ဖိုး
+
+  // Relations
+  stationId String
+  station   Station @relation(fields: [stationId], references: [id])
+
+  vehicleTypeId String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([stationId, vehicleTypeId]) // ဆိုင်တစ်ဆိုင်မှာ ယာဉ်တစ်မျိုးအတွက် Quota တစ်ခုပဲ ရှိရမယ်
+}
+
+model Queue {
+  id                String      @id @default(cuid())
+  queueNumber       Int // နေ့စဉ် တန်းစီနံပါတ်
+  qrCodeString      String      @unique // QR ကို String အနေနဲ့သိမ်းမယ်
+  status            QueueStatus @default(PENDING)
+  requestedFuelType FuelType?
+
+  // Relations
+  customerId String
+  customer   User   @relation(fields: [customerId], references: [id])
+
+  stationId String
+  station   Station @relation(fields: [stationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
